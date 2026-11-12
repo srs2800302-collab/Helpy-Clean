@@ -1,0 +1,43 @@
+# Операционные системы
+.DS_Store
+Thumbs.db
+
+# IDE и редакторы
+.idea/
+.vscode/
+*.iml
+
+# Переменные окружения и секреты
+.env
+.env.*
+!.env.example
+
+# Логи
+*.log
+
+# Node
+node_modules/
+.npm/
+.pnpm-store/
+dist/
+coverage/
+
+# Dart / Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Сгенерированные Android / iOS данные
+**/android/.gradle/
+**/android/app/build/
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/
+
+# Временные файлы
+tmp/
+temp/
