@@ -1,0 +1,8 @@
+name: helpy_contracts
+description: Provider-independent Helpy wire contracts and localization catalog types.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+dev_dependencies:
+  test: ^1.26.3

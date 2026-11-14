@@ -1,6 +1,10 @@
 # F1 — Clean Structure
 
-Статус: `NOT STARTED`.
+Статус: `IMPLEMENTED / ACCEPTANCE PENDING`.
+
+Реализация и результаты проверок описаны в `F1_IMPLEMENTATION.md` и
+`F1_REPORT.md`. Android build и CI ещё не подтверждены. Этот статус не
+является приёмкой F1 владельцем и не разрешает переход к F2.
 
 F1 — первый технический пакет Этапа 1.
 

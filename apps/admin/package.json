@@ -1,0 +1,14 @@
+{
+  "name": "@helpy/admin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -p tsconfig.json && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": { "@helpy/contracts": "0.1.0" },
+  "devDependencies": { "jsdom": "31.0.0", "vite": "8.3.8" }
+}

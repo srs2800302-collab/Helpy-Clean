@@ -1,0 +1,101 @@
+
+added 49 packages, and audited 53 packages in 1m
+
+16 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+> verify
+> npm run build && npm test
+
+
+> build
+> npm run build --workspaces
+
+
+> @helpy/contracts@0.1.0 build
+> tsc -p tsconfig.json
+
+
+> @helpy/backend@0.1.0 build
+> tsc -p tsconfig.json
+
+
+> @helpy/admin@0.1.0 build
+> tsc -p tsconfig.json && vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 10 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                 0.43 kB │ gzip: 0.28 kB
+dist/assets/index-GU28i6Z2.css  0.81 kB │ gzip: 0.46 kB
+dist/assets/index-D8OOQoB-.js   3.53 kB │ gzip: 1.71 kB
+
+✓ built in 609ms
+
+> test
+> npm run test --workspaces && node --test tests/*.test.mjs
+
+
+> @helpy/contracts@0.1.0 test
+> node --test test/*.test.mjs
+
+✔ health wire fixtures are accepted or rejected explicitly (127.576291ms)
+✔ one complete catalog serves all three languages without silent fallbacks (40.285816ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 827.576516
+
+> @helpy/backend@0.1.0 test
+> node --test test/*.test.mjs
+
+✔ Backend executable starts independently and shuts down on SIGTERM (998.843371ms)
+✔ transport is executable without any server runtime (29.762935ms)
+✔ Node adapter serves real HTTP and preserves the wire contract (457.651229ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2598.879685
+
+> @helpy/admin@0.1.0 test
+> node --test test/*.test.mjs
+
+✔ built Admin has a real HTTP entry point with loadable JS and CSS (653.404354ms)
+✔ Admin switches th -> ru immediately and restores the preference (570.281028ms)
+✔ Admin switches th -> en immediately and restores the preference (78.94563ms)
+✔ Admin switches ru -> th immediately and restores the preference (72.815699ms)
+✔ Admin switches ru -> en immediately and restores the preference (70.881693ms)
+✔ Admin switches en -> th immediately and restores the preference (105.727761ms)
+✔ Admin switches en -> ru immediately and restores the preference (63.470222ms)
+✔ unavailable browser storage does not prevent localized UI or language switching (107.293698ms)
+✔ invalid persisted language is rejected rather than injected into UI (1.646326ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3768.433198
+✔ boundary guard rejects representative inverted dependencies (79.156833ms)
+✔ source dependency directions, portability and isolation hold (275.306594ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1471.081333

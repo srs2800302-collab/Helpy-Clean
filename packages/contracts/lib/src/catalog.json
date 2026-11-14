@@ -1,0 +1,29 @@
+{
+  "languages": {"th": "ไทย", "ru": "Русский", "en": "English"},
+  "messages": {
+    "th": {
+      "title": "Helpy",
+      "adminTitle": "Helpy · พื้นที่ดูแลระบบ",
+      "foundation": "รากฐานที่เป็นอิสระ",
+      "description": "โครงสร้างพื้นฐานพร้อมสำหรับการพัฒนาในขั้นต่อไป",
+      "language": "ภาษาอินเทอร์เฟซ",
+      "preferenceUnavailable": "ไม่สามารถบันทึกภาษาได้ในขณะนี้"
+    },
+    "ru": {
+      "title": "Helpy",
+      "adminTitle": "Helpy · Административная среда",
+      "foundation": "Независимый фундамент",
+      "description": "Базовая структура готова к следующим этапам разработки.",
+      "language": "Язык интерфейса",
+      "preferenceUnavailable": "Сейчас не удалось сохранить выбранный язык."
+    },
+    "en": {
+      "title": "Helpy",
+      "adminTitle": "Helpy · Administration workspace",
+      "foundation": "An independent foundation",
+      "description": "The foundation is ready for the next development stages.",
+      "language": "Interface language",
+      "preferenceUnavailable": "Your language preference could not be saved."
+    }
+  }
+}

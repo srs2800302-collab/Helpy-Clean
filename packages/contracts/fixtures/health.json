@@ -1,0 +1,4 @@
+{
+  "valid": [{"status": "ok", "contractVersion": 1}],
+  "invalid": [null, [], "ok", {}, {"status": "ok"}, {"status": "down", "contractVersion": 1}, {"status": "ok", "contractVersion": "1"}, {"status": "ok", "contractVersion": 2}, {"status": "ok", "contractVersion": 1, "extra": true}]
+}

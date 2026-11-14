@@ -1,0 +1,12 @@
+{
+  "name": "@helpy/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": { "@helpy/contracts": "0.1.0" }
+}
