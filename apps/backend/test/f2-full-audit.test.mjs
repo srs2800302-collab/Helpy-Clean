@@ -43,7 +43,7 @@ for (const [field, value] of [['initialAutoClose', 'false'], ['initialDuration',
   const h = harness(); await h.published();
   h.repository.state.policies[0][field] = value;
   await denied(h, () => read(h, M, { type: 'feed' }), ['InvalidConfiguration', 'InvalidRate', 'InvalidLocale']);
-  await denied(h, () => h.execute(C, { type: 'new_job', id: 'invalid-policy-job', draft: { items: [scope(h.fixture)], cep: 1000n, address: 'Exact address' } }), ['InvalidConfiguration', 'InvalidRate', 'InvalidLocale']);
+  await denied(h, () => h.execute(C, { type: 'new_job', id: 'invalid-policy-job', draft: { items: [scope(h.fixture)], cep: 1000n, publicAddress: 'Public district street', address: 'Exact address' } }), ['InvalidConfiguration', 'InvalidRate', 'InvalidLocale']);
 });
 
 test('AUDIT policy does not resolve duplicate saved versions or effective instants arbitrarily', async () => {
@@ -59,7 +59,7 @@ test('AUDIT a managed policy remains bound to the original Admin publication', a
   await h.ok(A, { type: 'publish_policy', policy: { ...h.config, version: 'managed-policy', effectiveAt: 100 } });
   await h.published('legitimate-policy-control');
   h.repository.state.policies.find(value => value.version === 'managed-policy').initialAutoClose = false;
-  await denied(h, () => h.execute(C, { type: 'new_job', id: 'corrupt-policy', draft: { items: [scope(h.fixture)], cep: 1000n, address: 'Exact address' } }), ['InvalidReference', 'InvalidConfiguration']);
+  await denied(h, () => h.execute(C, { type: 'new_job', id: 'corrupt-policy', draft: { items: [scope(h.fixture)], cep: 1000n, publicAddress: 'Public district street', address: 'Exact address' } }), ['InvalidReference', 'InvalidConfiguration']);
 });
 
 for (const corruption of ['status', 'enabled', 'questions']) test(`AUDIT canonical published catalog validates saved ${corruption} before use`, async () => {
@@ -68,7 +68,7 @@ for (const corruption of ['status', 'enabled', 'questions']) test(`AUDIT canonic
   if (corruption === 'status') catalog.status = 'draft';
   if (corruption === 'enabled') catalog.categories[0].enabled = 'false';
   if (corruption === 'questions') catalog.scenarios[0].form.questions = null;
-  await denied(h, () => h.execute(C, { type: 'new_job', id: 'invalid-catalog', draft: { items: [scope(h.fixture)], cep: 1000n, address: 'Exact address' } }),
+  await denied(h, () => h.execute(C, { type: 'new_job', id: 'invalid-catalog', draft: { items: [scope(h.fixture)], cep: 1000n, publicAddress: 'Public district street', address: 'Exact address' } }),
     ['InvalidReference', 'InvalidConfiguration', 'ApprovalRequired']);
 });
 
@@ -142,7 +142,7 @@ test('AUDIT delivery rejects another user or role stored under a recipient prefe
 
 for (const operation of ['counts', 'cash-view', 'debt-view', 'reputation', 'threshold', 'publication']) test(`AUDIT ${operation} validates the addressed profile identity`, async () => {
   const h = harness();
-  if (operation === 'publication') await h.ok(C, { type: 'new_job', id: 'identity-publication', draft: { items: [scope(h.fixture)], cep: 1000n, address: 'Exact address' } });
+  if (operation === 'publication') await h.ok(C, { type: 'new_job', id: 'identity-publication', draft: { items: [scope(h.fixture)], cep: 1000n, publicAddress: 'Public district street', address: 'Exact address' } });
   h.repository.state.users.master.id = 'stranger';
   const action = operation === 'counts' ? () => read(h, A, { type: 'role_counts' }) :
     operation === 'cash-view' ? () => read(h, C, { type: 'cash_availability', masterId: 'master' }) :

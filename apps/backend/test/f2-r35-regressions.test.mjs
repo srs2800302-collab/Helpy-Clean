@@ -63,7 +63,7 @@ for (const mode of ['temporary', 'working']) for (const session of [C, M]) {
   scenario(`job admission ${mode} ${session}`, ['SAF.1', 'SAF.2', 'SAF.3', 'SAF.4', 'SAF.9', 'SAF.11'], async () => {
     const h = await fixture(mode), numeric = 'Cost 1200 THB; 60 x 80 x 90 cm; 3 items; 2026-11-19 14:30';
     const control = watch(h); await h.ok(session, message('control', numeric));
-    assert.deepEqual(control.checks, [{ text: numeric, purpose: 'job_chat' }, { text: numeric, purpose: 'external_translation' }]);
+    assert.deepEqual(control.checks, [{ text: numeric, purpose: 'job_chat' }, { text: numeric, purpose: 'job_chat' }]);
     assert.deepEqual(control.exports, [{ method: 'detect', args: [numeric] }]);
     for (const reason of ['contact', 'address', 'account_identifier', 'personal_data']) {
       const observed = watch(h, request => success({ ...request, status: 'rejected', reason }));
@@ -107,12 +107,13 @@ scenario('Domain admission cannot be omitted or rebound', ['SAF.1', 'SAF.2', 'SA
 for (const mode of ['temporary', 'working', 'support']) scenario(`blocked detection preserves legal message ${mode}`, ['SAF.5', 'SAF.6', 'SAF.7'], async () => {
   const h = await fixture(mode), session = mode === 'support' ? M : C, chatId = mode === 'support' ? 'support' : chat;
   for (const [name, inspect] of [['rejected', reject], ...invalidDecisions]) {
-    const observed = watch(h, request => request.purpose === 'job_chat' ? allow(request) : inspect(request));
+    let jobChecks = 0;
+    const observed = watch(h, request => mode !== 'support' && request.purpose === 'job_chat' && jobChecks++ === 0 ? allow(request) : inspect(request));
     const original = mode === 'support' ? `personal contact for official review ${name}` : `Work ${name}`;
     const result = await h.ok(session, message(`degraded:${name}`, original, chatId));
     assert.equal(result.outcome.message.original, original); assert.equal(result.outcome.message.originalLanguage, null);
     assert.equal(observed.exports.length, 0);
-    assert.deepEqual(observed.checks.map(value => value.purpose), mode === 'support' ? ['external_translation'] : ['job_chat', 'external_translation']);
+    assert.deepEqual(observed.checks.map(value => value.purpose), mode === 'support' ? ['external_translation'] : ['job_chat', 'job_chat']);
   }
   const observed = watch(h); await h.ok(session, message('detect-control', 'Safe text 1200', chatId));
   assert.equal(h.repository.state.messages['detect-control'].originalLanguage, 'en'); assert.equal(observed.exports.length, 1);
@@ -156,12 +157,13 @@ for (const kind of ['temporary', 'working', 'support-user', 'support-official', 
     const control = await action(); assert.equal(control.ok, true); assert.deepEqual(await h.repository.read(), before);
     if (kind === 'draft') { assert.equal(control.value.approved, false); assert.equal(typeof control.value.candidate, 'string'); }
     else assert.equal(control.value.original, h.repository.state.messages.source.original);
-    assert.equal(observed.exports.length, 1); assert.equal(observed.checks.length, 1); assert.equal(observed.checks[0].purpose, 'external_translation');
+    const purpose = kind === 'temporary' || kind === 'working' ? 'job_chat' : 'external_translation';
+    assert.equal(observed.exports.length, 1); assert.equal(observed.checks.length, 1); assert.equal(observed.checks[0].purpose, purpose);
     const original = observed.checks[0].text;
     for (const [name, inspect] of [['rejected', reject], ...invalidDecisions]) {
       const guarded = watch(h, inspect);
       await deny(h, action, name === 'rejected' ? 'TextRejected' : 'TextSafetyUnavailable');
-      assert.equal(guarded.exports.length, 0); assert.deepEqual(guarded.checks, [{ text: original, purpose: 'external_translation' }]);
+      assert.equal(guarded.exports.length, 0); assert.deepEqual(guarded.checks, [{ text: original, purpose }]);
     }
     const guarded = watch(h); h.ports.translation.translate = async () => { throw new Error('controlled provider outage'); };
     await deny(h, action, 'TranslationUnavailable'); assert.equal(guarded.checks.length, 1);
@@ -181,8 +183,11 @@ for (const kind of ['temporary', 'working', 'support-user', 'support-official', 
         if (change === 'identity') return success({ userId: 'someone-else', role: session === A ? 'admin' : session.endsWith(':client') ? 'client' : 'master', permissions: [] });
         return change === 'permission' ? success({ ...admin, permissions: admin.permissions.filter(value => value !== purpose) }) : auth(value);
       };
+      let jobChecks = 0;
       const observed = watch(h, request => {
-        if (request.purpose === 'external_translation') {
+        const boundaryCheck = request.purpose === 'external_translation' || request.purpose === 'job_chat' &&
+          (!kind.startsWith('detect') || ++jobChecks === 2);
+        if (boundaryCheck) {
           revoked = true;
           if (change === 'active-role') h.repository.state.users[session === C ? 'client' : 'master'][session === C ? 'clientActive' : 'masterActive'] = false;
           boundary = structuredClone(h.repository.state);
@@ -198,10 +203,10 @@ for (const kind of ['temporary', 'working', 'support-user', 'support-official', 
 }
 
 scenario('job closure while safety awaits blocks detection without command effects', ['SAF.8', 'SAF.9'], async () => {
-  for (const purpose of ['job_chat', 'external_translation']) {
-    const h = await fixture('temporary'); let boundary;
+  for (const closeAt of [1, 2]) {
+    const h = await fixture('temporary'); let boundary, checks = 0;
     const observed = watch(h, request => {
-      if (request.purpose === purpose) { h.repository.state.threads[chat].mode = 'closed'; boundary = structuredClone(h.repository.state); }
+      if (request.purpose === 'job_chat' && ++checks === closeAt) { h.repository.state.threads[chat].mode = 'closed'; boundary = structuredClone(h.repository.state); }
       return allow(request);
     });
     const receipts = structuredClone(h.repository.receipts), result = await h.execute(C, message('late', 'Safe text'));
@@ -282,13 +287,13 @@ scenario('saved originals are checked again for each requested locale after rest
     await deny(h, () => core.translateMessage(M, 'historical', locale), 'TextRejected');
   }
   assert.equal(h.repository.state.messages.historical.original, original); assert.equal(observed.exports.length, 0);
-  assert.deepEqual(observed.checks, ['th', 'ru', 'en'].map(() => ({ text: original, purpose: 'external_translation' })));
+  assert.deepEqual(observed.checks, ['th', 'ru', 'en'].map(() => ({ text: original, purpose: 'job_chat' })));
   return { previouslyRetainedOriginalChecked: true, locales: 3, restart: true, exports: 0, immutableOriginal: true };
 });
 
 scenario('publication deadline reached during safety prevents one-sided late export', ['SAF.8', 'SAF.9'], async () => {
-  const h = await fixture('temporary'), observed = watch(h, request => {
-    if (request.purpose === 'external_translation') h.clock.value = h.repository.state.jobs.job.cycles[0].countdown.deadline;
+  const h = await fixture('temporary'); let checks = 0; const observed = watch(h, request => {
+    if (request.purpose === 'job_chat' && ++checks === 2) h.clock.value = h.repository.state.jobs.job.cycles[0].countdown.deadline;
     return allow(request);
   });
   await deny(h, () => h.execute(C, message('late', 'Safe work text')), 'PublicationExpired');

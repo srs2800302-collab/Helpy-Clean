@@ -49,7 +49,7 @@ Domain/Application не зависят от Worker/D1/R2/Images/Typhoon/HTTP.
 
 1. последующее явное решение владельца;
 2. accepted F2 R35 + baseline source;
-3. настоящий R9.1;
+3. настоящий R9.4;
 4. F1 architecture/foundation.
 
 R4.1–R8.1 — только история проектирования.
@@ -285,7 +285,7 @@ Secret value в Git/source/docs/tests запрещён.
 
 # 8. Физическая схема — 35 таблиц
 
-Сокращения: PK=primary key, UQ=unique, FK=foreign key, CK=check.  
+Сокращения: PK=primary key, UQ=unique, FK=foreign key, CK=check.
 Все неуказанные nullable-поля допускают NULL только согласно F2.
 
 | # | Table | Обязательная физическая форма |

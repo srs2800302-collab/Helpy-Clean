@@ -48,3 +48,8 @@ temp/
 **/android/key.properties
 *.jks
 *.keystore
+
+# F3 local Wrangler state and secret files
+apps/backend/.wrangler/
+apps/backend/.dev.vars
+apps/backend/.dev.vars.*

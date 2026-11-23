@@ -244,6 +244,7 @@ export class DomainCore {
     const provider = providerCommand ? await Validate.callPort(() => this.ports.payments.verifyOutcome(providerCommand.proof), Validate.providerOutcome, 'ProviderConflict') : null;
     if (provider && !provider.ok) return provider;
     const detection = messageCommand && conversation && messageCommand.original.trim() ? await this.translator.detect(messageCommand.original,
+      conversation.type === 'job' ? 'job_chat' : 'external_translation',
       () => this.messageAccess(session, actor, messageCommand, conversation)) : null;
     if (detection?.fatal && !detection.result.ok) return detection.result;
     const detected = detection?.result ?? null;
@@ -351,7 +352,8 @@ export class DomainCore {
           const job = jobById(command.jobId); owner(actor, job.clientId, 'client'); requireThat(job.draft, 'PublishedSnapshotImmutable'); const current = catalog();
           unwrap(Catalog.validateScope(current, job.draft.items, photos.value, actor.userId));
           const rules = Catalog.ruleReferences(current, job.draft.items);
-          Market.publishJob(job, actor, { catalogKey: Catalog.catalogKey(current), items: job.draft.items, cep: job.draft.cep, address: job.draft.address, rules,
+          Market.publishJob(job, actor, { catalogKey: Catalog.catalogKey(current), items: job.draft.items, cep: job.draft.cep,
+            publicAddress: job.draft.publicAddress, address: job.draft.address, rules,
             photoIds: job.draft.items.flatMap(item => Object.values(item.photos).flat()) }, policy, now);
           matchedNotification(job); outcome = { kind: 'job', job }; break;
         }
@@ -528,7 +530,9 @@ export class DomainCore {
         case 'review': {
           requireThat(!state.events.some(record => record.type === 'operation:review' && record.context.kind === 'job' && record.context.jobId === command.jobId), 'Conflict');
           if (!own(state.reviews, command.id)) Integrity.requireNewIdentity(state, 'review', command.id);
-          const review = Reputation.createReview(state, jobById(command.jobId), actor, command, now); outcome = { kind: 'review', review }; break;
+          const review = Reputation.createReview(state, jobById(command.jobId), actor,
+            { id: command.id, stars: command.stars, marks: command.marks, comment: command.comment }, now);
+          outcome = { kind: 'review', review }; break;
         }
         case 'hide_review': { const review = Integrity.reviewById(state, command.reviewId); Reputation.hideReview(review, actor, command.reason, now);
           emit('review_hidden', review.id, [], { jobId: review.jobId, reason: command.reason }); outcome = { kind: 'review', review }; break; }
@@ -664,21 +668,23 @@ export class DomainCore {
       if (auth.value.role !== 'admin') { Accounts.requireActive(own(state.users, auth.value.userId), auth.value, auth.value.role); Accounts.accountById(state, auth.value.userId); }
       const message = own(state.messages, messageId); requireThat(message, 'NotFound'); const thread = Integrity.threadById(state, message.chatId); Chat.participant(thread, auth.value);
       Chat.messageById(state, thread, messageId, state.events);
-      requireThat(effectivePolicy(state.policies, this.clock.now(), state.events).locales.includes(target), 'InvalidLocale'); return message;
+      requireThat(effectivePolicy(state.policies, this.clock.now(), state.events).locales.includes(target), 'InvalidLocale');
+      return { message, purpose: thread.context.type === 'job' ? 'job_chat' as const : 'external_translation' as const };
     });
     if (!allowed.ok) return allowed;
-    const translated = await this.translator.translate(allowed.value.original, allowed.value.originalLanguage, target, async () => {
+    const translated = await this.translator.translate(allowed.value.message.original, allowed.value.message.originalLanguage, target, allowed.value.purpose, async () => {
       const current = await Validate.callPort(() => this.ports.auth.authenticate(session), Validate.principal, 'Unauthorized'); if (!current.ok) return current;
       const loaded = await Validate.readRepository(this.ports.repository); if (!loaded.ok) return loaded; const currentState = loaded.value;
       return checked(() => {
         requireThat(current.value.userId === auth.value.userId && current.value.role === auth.value.role, 'Unauthorized');
         if (current.value.role !== 'admin') { Accounts.requireActive(own(currentState.users, current.value.userId), current.value, current.value.role); Accounts.accountById(currentState, current.value.userId); }
-        const thread = Integrity.threadById(currentState, allowed.value.chatId); Chat.participant(thread, current.value);
-        requireThat(sameFact(Chat.messageById(currentState, thread, messageId, currentState.events), allowed.value), 'InvalidReference');
+        const thread = Integrity.threadById(currentState, allowed.value.message.chatId); Chat.participant(thread, current.value);
+        requireThat(sameFact(Chat.messageById(currentState, thread, messageId, currentState.events), allowed.value.message) &&
+          (thread.context.type === 'job' ? 'job_chat' : 'external_translation') === allowed.value.purpose, 'InvalidReference');
         requireThat(effectivePolicy(currentState.policies, this.clock.now(), currentState.events).locales.includes(target), 'InvalidLocale');
       });
     });
-    return translated.ok ? success({ original: allowed.value.original, translated: translated.value, locale: target }) : translated;
+    return translated.ok ? success({ original: allowed.value.message.original, translated: translated.value, locale: target }) : translated;
   }
 
   async draftTranslation(session: string, original: string, source: string, target: string): Promise<Result<{ candidate: string; approved: false }>> {
@@ -687,7 +693,7 @@ export class DomainCore {
     const loaded = await Validate.readRepository(this.ports.repository); if (!loaded.ok) return loaded; const state = loaded.value;
     const allowed = checked(() => { authorize(auth.value, 'catalog'); const locales = [...requiredLocales, ...effectivePolicy(state.policies, this.clock.now(), state.events).locales];
       requireThat(original.trim() && source !== target && locales.includes(source) && locales.includes(target), 'InvalidLocale'); }); if (!allowed.ok) return allowed;
-    const translated = await this.translator.translate(original, source, target, async () => {
+    const translated = await this.translator.translate(original, source, target, 'external_translation', async () => {
       const current = await Validate.callPort(() => this.ports.auth.authenticate(session), Validate.principal, 'Unauthorized'); if (!current.ok) return current;
       const loaded = await Validate.readRepository(this.ports.repository); if (!loaded.ok) return loaded; const currentState = loaded.value;
       return checked(() => {

@@ -26,7 +26,7 @@ export type Query = { type: 'feed' } | { type: 'job'; jobId: string } | { type: 
   { type: 'payout'; jobId: string } | { type: 'inbox' };
 export interface JobView {
   readonly id: string; readonly state: Job['state']; readonly items: readonly ScopeItem[]; readonly cep: bigint;
-  readonly fap: bigint | null; readonly exactAddress: string | null; readonly chatId: string | null;
+  readonly fap: bigint | null; readonly publicAddress: string; readonly address: string | null; readonly chatId: string | null;
   readonly completedAt: number | null; readonly acceptedAt: number | null;
 }
 export type QueryValue = { type: 'feed'; jobs: ReturnType<typeof feed> } | { type: 'job'; job: JobView } |
@@ -44,7 +44,7 @@ function view(job: Job, actor: Principal): JobView {
   const ownClient = actor.userId === job.clientId && actor.role === 'client';
   const assignedMaster = actor.userId === job.selectedMasterId && actor.role === 'master' && ['assigned', 'working', 'client_accepted', 'completed'].includes(job.state);
   return { id: job.id, state: job.state, items: job.snapshot.items, cep: job.snapshot.cep, fap: job.financial?.fap ?? null,
-    exactAddress: ownClient || assignedMaster ? address(job, actor) : null,
+    publicAddress: job.snapshot.publicAddress, address: ownClient || assignedMaster ? address(job, actor) : null,
     chatId: ownClient || actor.userId === job.selectedMasterId ? job.chatId : own(job.offers, actor.userId)?.chatId ?? null,
     completedAt: job.completedAt, acceptedAt: job.acceptedAt };
 }

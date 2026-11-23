@@ -27,7 +27,7 @@ test('CAT lifecycle create/edit/publish/disable/republish/remove and independent
   assert.equal(h.repository.state.published['test-catalog:3'].categories.find(c => c.id === 'new-root').order, 0);
   await configure(h, draft => { draft.entities.find(e => e.id === 'air-install').enabled = false; draft.entities.find(e => e.id === 'air-replace').enabled = false; draft.categories.find(c => c.id === 'air').enabled = false; }, 4);
   const disabled = h.repository.state.published['test-catalog:4'];
-  await h.reject('client:client', { type: 'new_job', id: 'disabled', draft: { items: [scope(disabled, 'air-service', 'service')], cep: 1n, address: 'private' } }, 'InactiveEntity');
+  await h.reject('client:client', { type: 'new_job', id: 'disabled', draft: { items: [scope(disabled, 'air-service', 'service')], cep: 1n, publicAddress: 'public district street', address: 'private' } }, 'InactiveEntity');
   assert.equal(h.repository.state.jobs.disabled, undefined);
   await configure(h, draft => { draft.categories.find(c => c.id === 'air').enabled = true; }, 5);
   const republished = h.repository.state.published['test-catalog:5'];

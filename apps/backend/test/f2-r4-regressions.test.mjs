@@ -174,7 +174,7 @@ for (const id of ['constructor', '__proto__', 'toString']) {
     assert.equal((await h.core.authenticate('login', id, 'login')).ok, true);
     assert.equal(Object.hasOwn(h.repository.state.users, id), true);
     assert.equal((await read(h, { type: 'contacts', userId: id })).value.contacts.email, `${id}@test.invalid`);
-    await h.ok(client, { type: 'new_job', id, draft: { items: [scope(h.fixture)], cep: 1000n, address: 'Private' } });
+    await h.ok(client, { type: 'new_job', id, draft: { items: [scope(h.fixture)], cep: 1000n, publicAddress: 'Public district street', address: 'Private' } });
     await h.ok(client, { type: 'publish_job', jobId: id });
     await h.ok(master, { type: 'initial_offer', jobId: id, id, chatId: id });
     await h.ok(client, { type: 'message', chatId: id, id, original: 'Original', photoIds: [], sender: 'user' });

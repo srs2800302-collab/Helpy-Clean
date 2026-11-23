@@ -330,7 +330,7 @@ scenario('AUDIT query identity is current after awaiting the repository snapshot
 
 scenario('AUDIT published status cannot be rolled back to reopen draft editing', ['PUB.1', 'PUB.2', 'PUB.4', 'APP.4'], async () => {
   const h = harness(); await h.published(); const snapshot = h.repository.state.jobs.job.snapshot;
-  const draft = { items: snapshot.items, cep: 2000n, address: 'A different address' };
+  const draft = { items: snapshot.items, cep: 2000n, publicAddress: 'A different public street', address: 'A different address' };
   await h.ok(C, { type: 'new_job', id: 'legal-draft', draft });
   await h.ok(C, { type: 'edit_draft', jobId: 'legal-draft', draft: { ...draft, cep: 2100n } });
   await h.ok(C, { type: 'publish_job', jobId: 'legal-draft' });

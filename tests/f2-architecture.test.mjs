@@ -9,7 +9,9 @@ function runtimeOffenders(file, source) {
   const tree = ts.createSourceFile(file, source, ts.ScriptTarget.ES2023, true);
   const offenders = [];
   function visit(node) {
-    if (ts.isIdentifier(node) && ['process', 'Buffer', 'fetch', 'setTimeout', 'setInterval', 'D1Database', 'ExecutionContext'].includes(node.text)) offenders.push(node.text);
+    const memberName = node.parent && ((ts.isPropertyAccessExpression(node.parent) && node.parent.name === node) ||
+      ((ts.isMethodSignature(node.parent) || ts.isMethodDeclaration(node.parent) || ts.isPropertyAssignment(node.parent)) && node.parent.name === node));
+    if (ts.isIdentifier(node) && !memberName && ['process', 'Buffer', 'fetch', 'setTimeout', 'setInterval', 'D1Database', 'ExecutionContext'].includes(node.text)) offenders.push(node.text);
     if (ts.isStringLiteral(node) && /^(node:|@cloudflare|wrangler)/.test(node.text)) offenders.push(node.text);
     if (ts.isNewExpression(node) && node.expression.getText(tree) === 'Date') offenders.push('new Date');
     ts.forEachChild(node, visit);
@@ -19,6 +21,7 @@ function runtimeOffenders(file, source) {
 test('BND F2 internal layers compile without Node types, DOM, runtime globals or external adapters', async () => {
   assert.deepEqual(runtimeOffenders('negative.ts', "import fs from 'node:fs'; process.exit(); fetch('x'); new Date();"), ['node:fs', 'process', 'fetch', 'new Date']);
   assert.deepEqual(runtimeOffenders('comment.ts', '// process restart is a persistence guarantee'), []);
+  assert.deepEqual(runtimeOffenders('port.ts', 'interface Images { process(): void } const port = { process() {} }; port.process();'), []);
   const files = [];
   for (const layer of ['domain', 'application']) {
     const directory = path.join(root, 'apps/backend/src', layer);

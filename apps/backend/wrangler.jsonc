@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "helpy-backend",
+  "main": "src/infrastructure/cloudflare/worker.ts",
+  "compatibility_date": "2026-11-19",
+  "d1_databases": [{ "binding": "DB", "database_name": "helpy", "database_id": "5874a9aa-be98-4d81-9a38-848380ca42f0", "migrations_dir": "migrations" }],
+  "r2_buckets": [{ "binding": "PHOTO_BUCKET", "bucket_name": "helpy-photos" }],
+  "images": { "binding": "IMAGES" },
+  "vars": {
+    "TYPHOON_BASE_URL": "https://api.opentyphoon.ai/v1",
+    "TYPHOON_MODEL": "typhoon-v2.5-30b-a3b-instruct"
+  },
+  "secrets": { "required": ["TYPHOON_API_KEY"] }
+}

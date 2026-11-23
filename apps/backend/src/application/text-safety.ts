@@ -5,6 +5,11 @@ import type { TextSafetyDecision, TextSafetyPurpose } from '../domain/text-safet
 import type { TextSafetyPort, TranslationPort } from './ports.js';
 import * as Validate from './validation.js';
 
+interface PurposeAwareTranslationPort extends TranslationPort {
+  translateWithPurpose?(original: string, source: string | null, target: string, purpose: TextSafetyPurpose): Promise<Result<string>>;
+  detectWithPurpose?(original: string, purpose: TextSafetyPurpose): Promise<Result<{ language: string; reliable: boolean }>>;
+}
+
 export async function inspectText(port: TextSafetyPort, text: string, purpose: TextSafetyPurpose): Promise<Result<TextSafetyDecision>> {
   let result: Result<TextSafetyDecision>;
   try {
@@ -27,8 +32,8 @@ export interface DetectionAttempt {
 export class ProtectedTranslation {
   constructor(private readonly safety: TextSafetyPort, private readonly provider: TranslationPort) {}
 
-  private async run<T>(text: string, access: Access, send: () => Promise<Result<T>>, shape: Validate.Shape): Promise<{ result: Result<T>; fatal: boolean }> {
-    const approved = await inspectText(this.safety, text, 'external_translation');
+  private async run<T>(text: string, purpose: TextSafetyPurpose, access: Access, send: () => Promise<Result<T>>, shape: Validate.Shape): Promise<{ result: Result<T>; fatal: boolean }> {
+    const approved = await inspectText(this.safety, text, purpose);
     if (!approved.ok) return { result: approved, fatal: false };
     const allowed = await access(); if (!allowed.ok) return { result: allowed, fatal: true };
     let result: Result<T>;
@@ -37,10 +42,16 @@ export class ProtectedTranslation {
     const valid = Validate.portResult(result, shape, 'TranslationUnavailable');
     return { result: valid, fatal: !valid.ok && valid !== result };
   }
-  detect(text: string, access: Access): Promise<DetectionAttempt> {
-    return this.run(text, access, () => this.provider.detect(text), Validate.detection);
+  detect(text: string, purpose: TextSafetyPurpose, access: Access): Promise<DetectionAttempt> {
+    const provider = this.provider as PurposeAwareTranslationPort;
+    return this.run(text, purpose, access,
+      () => provider.detectWithPurpose ? provider.detectWithPurpose(text, purpose) : this.provider.detect(text),
+      Validate.detection);
   }
-  async translate(text: string, source: string | null, target: string, access: Access): Promise<Result<string>> {
-    return (await this.run(text, access, () => this.provider.translate(text, source, target), Validate.text('TranslationUnavailable'))).result;
+  async translate(text: string, source: string | null, target: string, purpose: TextSafetyPurpose, access: Access): Promise<Result<string>> {
+    const provider = this.provider as PurposeAwareTranslationPort;
+    return (await this.run(text, purpose, access,
+      () => provider.translateWithPurpose ? provider.translateWithPurpose(text, source, target, purpose) : this.provider.translate(text, source, target),
+      Validate.text('TranslationUnavailable'))).result;
   }
 }

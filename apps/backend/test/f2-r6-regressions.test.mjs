@@ -37,7 +37,7 @@ for (const repayment of [false, true]) test(`R6 DEEP debt requires its paired or
 test('R6 DEEP current catalog cannot silently lose a confirmed historical publication', async () => {
   const h = harness(); await configure(h, 2);
   delete h.repository.state.published['test-catalog:1'];
-  await deny(h, () => h.execute(C, { type: 'new_job', id: 'job', draft: { items: [scope(h.fixture)], cep: 1000n, address: 'Exact site' } }), 'InvalidReference');
+  await deny(h, () => h.execute(C, { type: 'new_job', id: 'job', draft: { items: [scope(h.fixture)], cep: 1000n, publicAddress: 'Public district street', address: 'Exact site' } }), 'InvalidReference');
 });
 
 test('R6 DEEP refusal history cannot lose its paired event and matching projection while the command remains', async () => {

@@ -1,3 +1,5 @@
+export 'src/f3_api.g.dart';
+
 enum Language { th, ru, en }
 
 Language? parseLanguage(Object? value) {

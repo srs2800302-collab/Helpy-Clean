@@ -11,7 +11,7 @@ import { financialSnapshot } from './finance.js';
 import type { Policy } from './policy.js';
 import { sameFact } from './provenance.js';
 
-export interface JobScopeSnapshot { readonly catalogKey: string; readonly items: readonly ScopeItem[]; readonly rules: readonly { id: string; revision: number }[]; readonly cep: bigint; readonly address: string; readonly photoIds: readonly string[] }
+export interface JobScopeSnapshot { readonly catalogKey: string; readonly items: readonly ScopeItem[]; readonly rules: readonly { id: string; revision: number }[]; readonly cep: bigint; readonly publicAddress: string; readonly address: string; readonly photoIds: readonly string[] }
 export interface PublicationCycle { readonly index: number; readonly publishedAt: number; readonly countdown: Timer | null; hadBilateral: boolean; endedAt: number | null }
 export interface PriceProposal { readonly amount: bigint; readonly reason: string; readonly requestedAt: number; approvedAt: number | null; rejectedAt: number | null }
 export interface Offer { readonly id: string; readonly jobId: string; readonly masterId: string; readonly chatId: string; readonly catalogKey: string; readonly initialPrice: bigint; readonly initialAt: number; state: 'open' | 'selected' | 'closed'; revised: PriceProposal | null; final: { readonly amount: bigint; readonly sentAt: number } | null; closedReason: string | null }
@@ -21,7 +21,7 @@ export interface CancellationResponse {
 }
 export interface CancellationRequest { readonly id: string; readonly initiator: string; readonly reason: string; readonly explanation: string; readonly remainingWork: string; readonly classification: 'ordinary' | 'unclassified' | 'false_call' | 'partial'; readonly evidence: readonly string[]; readonly requestedAt: number; readonly responseTimer: Timer; reminder: Timer; workStopped: boolean | null; financialConsent: boolean | null; responseExplanation: string | null; response: CancellationResponse | null }
 export interface Job {
-  readonly id: string; readonly clientId: string; draft: { items: readonly ScopeItem[]; cep: bigint; address: string } | null;
+  readonly id: string; readonly clientId: string; draft: { items: readonly ScopeItem[]; cep: bigint; publicAddress: string; address: string } | null;
   snapshot: JobScopeSnapshot | null; state: 'draft' | 'published' | 'reserved' | 'assigned' | 'working' | 'client_accepted' | 'completed' | 'expired' | 'cancelled';
   cycles: PublicationCycle[]; offers: Record<string, Offer>; excludedMasters: string[]; selectedMasterId: string | null; chatId: string | null;
   financial: FinancialSnapshot | null; reservation: PaymentReservation | null; funds: 'none' | 'held' | 'releasable' | 'allocated';
@@ -32,8 +32,27 @@ export interface Job {
 }
 export interface RefusalRecord { readonly id: string; readonly masterId: string; readonly jobId: string; readonly offerId: string | null; readonly resolutionId: string | null; readonly at: number; readonly operationId: string }
 export interface MarketplaceState { jobs: Record<string, Job>; refusalStreak: Record<string, number>; refusals: Record<string, RefusalRecord> }
+// R9.4 §20: в открытом адресе допустимы только район и улица.
+// Проверка применяется при создании и изменении черновика: проекции не должны
+// получать заведомо точный адрес из публичного поля.
+const privateAddressDetail = /(?:\b(?:house\s*(?:no\.?|number|#)?|building\s*(?:no\.?|number|#)?|condo(?:minium)?|apartment|apt\.?|suite|unit|room|floor|flat)\b|(?:номер\s*(?:дома|квартиры|комнаты)|дом\s*(?:№|#|\d)|корпус|квартира|кв\.|этаж|комната|помещение|кондоминиум|здание\s*№)|(?:บ้านเลขที่|เลขที่|ห้อง(?:เลขที่)?|ชั้น(?:ที่)?|อาคาร(?:เลขที่)?|คอนโด))/iu;
+const leadingBuildingNumber = /(?:^|[,;\n])\s*(?:#|№)?\s*\d+[\p{L}]?\s+(?!(?:soi|street|road)\b)/iu;
+const unitNumberAfterStreet = /(?:\b(?:street|st\.?|road|rd\.?|avenue|ave\.?|lane|soi|улица|ул\.?|проспект|пер\.?|ถนน|ซอย)\s+[\p{L}\p{M}\d .-]+[,;\s]+(?:#|№)\s*\d+)/iu;
+// Номер строения после названия улицы (Main Road 22/7) не является названием улицы.
+const buildingNumberAfterStreet = /(?:\b(?:street|st\.?|road|rd\.?|avenue|ave\.?|lane|улица|ул\.?|проспект|пер\.?)\s+(?:(?:no\.?|number|#|№)\s*)?\d+[\p{L}]?(?:\s*\/\s*\d+[\p{L}]?)?(?=$|[,;]))/iu;
+// Название тайской улицы с последующим номером здания: ถนน สุขุมวิท 22/7.
+const thaiBuildingNumberAfterStreet = /(?<![\p{L}\p{N}])(?:ถนน|ซอย)\s+[\p{L}\p{M} .-]+?\s+(?:เลขที่\s*)?[\p{Nd}]+(?:\s*\/\s*[\p{Nd}]+)?(?=$|[,;])/u;
+function safePublicAddress(publicAddress: string, fullAddress: string): boolean {
+  const value = publicAddress.normalize('NFKC').trim();
+  if (!value || value.length > 240 || /[\r\n]/u.test(value)) return false;
+  if (value.toLocaleLowerCase() === fullAddress.normalize('NFKC').trim().toLocaleLowerCase()) return false;
+  // Запрещено передавать составной точный адрес через список полей.
+  if (value.split(/[,;]/u).length > 2) return false;
+  return !privateAddressDetail.test(value) && !leadingBuildingNumber.test(value) && !unitNumberAfterStreet.test(value) && !buildingNumberAfterStreet.test(value) && !thaiBuildingNumberAfterStreet.test(value);
+}
+
 export function newJob(state: MarketplaceState, actor: Principal, id: string, input: NonNullable<Job['draft']>): Job {
-  requireThat(actor.role === 'client', 'Unauthorized'); identifier(id); requireThat(!own(state.jobs, id) && typeof input.cep === 'bigint' && input.cep > 0n && input.address.trim(), 'InvalidScope');
+  requireThat(actor.role === 'client', 'Unauthorized'); identifier(id); requireThat(!own(state.jobs, id) && typeof input.cep === 'bigint' && input.cep > 0n && safePublicAddress(input.publicAddress, input.address) && input.address.trim(), 'InvalidScope');
   const job: Job = { id, clientId: actor.userId, draft: input, snapshot: null, state: 'draft', cycles: [], offers: {}, excludedMasters: [],
     selectedMasterId: null, chatId: null, financial: null, reservation: null, funds: 'none', acceptedAt: null, acceptanceOperationId: null,
     completedAt: null, lastActivityAt: null, inactivityReminder: null, inactivityThreshold: null, cancellation: null, resolutionId: null, linkedJobId: null, evidence: [] };
@@ -41,7 +60,7 @@ export function newJob(state: MarketplaceState, actor: Principal, id: string, in
 }
 export function editDraft(job: Job, actor: Principal, draft: NonNullable<Job['draft']>): void {
   owner(actor, job.clientId, 'client'); requireThat(job.state === 'draft', 'PublishedSnapshotImmutable');
-  requireThat(typeof draft.cep === 'bigint' && draft.cep > 0n && draft.address.trim(), 'InvalidScope'); job.draft = draft;
+  requireThat(typeof draft.cep === 'bigint' && draft.cep > 0n && safePublicAddress(draft.publicAddress, draft.address) && draft.address.trim(), 'InvalidScope'); job.draft = draft;
 }
 export function publishJob(job: Job, actor: Principal, snapshot: JobScopeSnapshot, policy: Policy, now: number): void {
   owner(actor, job.clientId, 'client'); requireThat(job.state === 'draft', 'PublishedSnapshotImmutable');
@@ -52,9 +71,9 @@ export function cycle(job: Job): PublicationCycle { const current = job.cycles[j
 export function acceptingOffers(job: Job, now: number): boolean { return job.state === 'published' && (cycle(job).countdown === null || now < cycle(job).countdown!.deadline); }
 export interface FeedPolicy { includes(specialization: Specialization, items: readonly ScopeItem[]): boolean }
 export const specializationOnly: FeedPolicy = { includes: matches };
-export function feed(state: MarketplaceState, masterId: string, specialization: Specialization, now: number, policy: FeedPolicy = specializationOnly): readonly { id: string; publishedAt: number; cep: bigint; items: readonly ScopeItem[] }[] {
+export function feed(state: MarketplaceState, masterId: string, specialization: Specialization, now: number, policy: FeedPolicy = specializationOnly): readonly { id: string; publishedAt: number; cep: bigint; publicAddress: string; items: readonly ScopeItem[] }[] {
   return Object.values(state.jobs).filter(job => job.clientId !== masterId && acceptingOffers(job, now) && !job.excludedMasters.includes(masterId) && job.snapshot && policy.includes(specialization, job.snapshot.items))
-    .sort((a, b) => cycle(b).publishedAt - cycle(a).publishedAt).map(job => ({ id: job.id, publishedAt: cycle(job).publishedAt, cep: job.snapshot!.cep, items: job.snapshot!.items }));
+    .sort((a, b) => cycle(b).publishedAt - cycle(a).publishedAt).map(job => ({ id: job.id, publishedAt: cycle(job).publishedAt, cep: job.snapshot!.cep, publicAddress: job.snapshot!.publicAddress, items: job.snapshot!.items }));
 }
 export function initialOffer(job: Job, chats: ChatState, actor: Principal, specialization: Specialization, id: string, chatId: string, now: number): Offer {
   requireThat(actor.role === 'master', 'Unauthorized'); requireThat(acceptingOffers(job, now), 'PublicationExpired');

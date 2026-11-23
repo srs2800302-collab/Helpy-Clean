@@ -254,7 +254,7 @@ test('CORRECTION D19 metadata batches are unique without inventing a cross-reque
   assert.equal(new Set(requested).size, requested.length);
   assert.deepEqual(h.repository.state.jobs['shared-photo'].snapshot.items[0].photos, item.photos);
   const duplicateWithinRequest = structuredClone(item); duplicateWithinRequest.photos['photo:technical'] = ['same', 'same'];
-  await h.ok('client:client', { type: 'new_job', id: 'duplicate-request', draft: { items: [duplicateWithinRequest], cep: 1000n, address: 'private' } });
+  await h.ok('client:client', { type: 'new_job', id: 'duplicate-request', draft: { items: [duplicateWithinRequest], cep: 1000n, publicAddress: 'public district street', address: 'private' } });
   await h.reject('client:client', { type: 'publish_job', jobId: 'duplicate-request' }, 'InvalidReference');
 });
 

@@ -1,0 +1,815 @@
+{
+  "commandFields": {
+    "publish_policy": {
+      "policy": "object"
+    },
+    "threshold": {
+      "masterId": "string",
+      "amount": "money?"
+    },
+    "save_catalog": {
+      "draft": "object",
+      "expectedSequence": "number?"
+    },
+    "approve_text": {
+      "key": "string",
+      "textId": "string",
+      "locale": "string",
+      "sequence": "number",
+      "revision": "number"
+    },
+    "approve_content_set": {
+      "key": "string",
+      "sequence": "number",
+      "revisions": "array",
+      "confirmed": "boolean"
+    },
+    "publish_catalog": {
+      "key": "string",
+      "sequence": "number"
+    },
+    "translation_correction": {
+      "oldCatalogKey": "string",
+      "newCatalogKey": "string",
+      "textId": "string",
+      "sameMeaningConfirmed": "boolean"
+    },
+    "profile": {
+      "displayName": "string",
+      "photoId": "string?",
+      "specialization": "object"
+    },
+    "activate": {
+      "role": "string"
+    },
+    "switch_role": {
+      "role": "string"
+    },
+    "locale": {
+      "locale": "string"
+    },
+    "bind_contact": {
+      "proof": "string"
+    },
+    "new_job": {
+      "id": "string",
+      "draft": "object"
+    },
+    "edit_draft": {
+      "jobId": "string",
+      "draft": "object"
+    },
+    "publish_job": {
+      "jobId": "string"
+    },
+    "link_jobs": {
+      "jobId": "string",
+      "linkedJobId": "string"
+    },
+    "initial_offer": {
+      "jobId": "string",
+      "id": "string",
+      "chatId": "string"
+    },
+    "message": {
+      "chatId": "string",
+      "id": "string",
+      "original": "string",
+      "photoIds": "array",
+      "sender": "string"
+    },
+    "revise_price": {
+      "jobId": "string",
+      "masterId": "string",
+      "amount": "money",
+      "reason": "string",
+      "confirmed": "boolean"
+    },
+    "approve_price": {
+      "jobId": "string",
+      "masterId": "string",
+      "approved": "boolean",
+      "confirmed": "boolean"
+    },
+    "final_application": {
+      "jobId": "string",
+      "masterId": "string",
+      "confirmed": "boolean",
+      "amount": "money",
+      "recipientId": "string"
+    },
+    "select_master": {
+      "jobId": "string",
+      "masterId": "string",
+      "confirmed": "boolean",
+      "amount": "money"
+    },
+    "terminate_negotiation": {
+      "jobId": "string",
+      "masterId": "string",
+      "confirmed": "boolean",
+      "reason": "string"
+    },
+    "publication_deadline": {
+      "jobId": "string",
+      "cycleIndex": "number"
+    },
+    "cash": {
+      "jobId": "string"
+    },
+    "initiate_payment": {
+      "jobId": "string",
+      "id": "string",
+      "route": "string"
+    },
+    "payment_outcome": {
+      "jobId": "string",
+      "proof": "string"
+    },
+    "reservation_deadline": {
+      "jobId": "string"
+    },
+    "decline_reservation": {
+      "jobId": "string",
+      "confirmed": "boolean"
+    },
+    "accept_work": {
+      "jobId": "string",
+      "accepted": "boolean",
+      "explanation": "string"
+    },
+    "submit_result": {
+      "jobId": "string",
+      "explanation": "string",
+      "photoIds": "array"
+    },
+    "complete": {
+      "jobId": "string"
+    },
+    "cancel": {
+      "jobId": "string",
+      "id": "string",
+      "reason": "string",
+      "explanation": "string",
+      "evidence": "array",
+      "confirmed": "boolean",
+      "classification": "string",
+      "remainingWork": "string"
+    },
+    "cancellation_response": {
+      "jobId": "string",
+      "workStopped": "boolean",
+      "financialConsent": "boolean",
+      "explanation": "string",
+      "remainingWork": "optional:string",
+      "evidence": "optional:array"
+    },
+    "open_resolution": {
+      "jobId": "string",
+      "id": "string",
+      "evidence": "array"
+    },
+    "decide_resolution": {
+      "caseId": "string",
+      "decision": "object"
+    },
+    "inspect_resolution": {
+      "caseId": "string"
+    },
+    "reminders": {
+      "jobId": "string"
+    },
+    "start_payout": {
+      "jobId": "string",
+      "attemptId": "string"
+    },
+    "payout_outcome": {
+      "jobId": "string",
+      "proof": "string"
+    },
+    "start_settlement": {
+      "obligationId": "string",
+      "attemptId": "string"
+    },
+    "settlement_outcome": {
+      "obligationId": "string",
+      "proof": "string"
+    },
+    "request_repayment": {
+      "id": "string",
+      "amount": "money",
+      "confirmed": "boolean"
+    },
+    "agree_repayment": {
+      "requestId": "string",
+      "amount": "money",
+      "method": "string",
+      "agreementId": "string"
+    },
+    "receive_repayment": {
+      "requestId": "string",
+      "masterId": "string",
+      "amount": "money",
+      "receiptId": "string",
+      "agreementId": "string",
+      "actuallyReceived": "boolean",
+      "evidence": "string"
+    },
+    "close_repayment": {
+      "requestId": "string",
+      "reason": "string"
+    },
+    "support": {
+      "id": "string",
+      "userId": "string",
+      "userRole": "string",
+      "basis": "string",
+      "basisId": "string"
+    },
+    "close_support": {
+      "chatId": "string"
+    },
+    "review": {
+      "jobId": "string",
+      "id": "string",
+      "stars": "number",
+      "marks": "array",
+      "comment": "string"
+    },
+    "hide_review": {
+      "reviewId": "string",
+      "reason": "string"
+    },
+    "hide_history": {
+      "jobId": "string"
+    },
+    "preferences": {
+      "preference": "object"
+    },
+    "inbox": {
+      "id": "string",
+      "recipientId": "string",
+      "original": "string"
+    },
+    "feedback": {
+      "id": "string",
+      "original": "string"
+    },
+    "evaluate_retention": {
+      "factId": "string"
+    }
+  },
+  "queryFields": {
+    "feed": {},
+    "job": {
+      "jobId": "string"
+    },
+    "payment": {
+      "jobId": "string"
+    },
+    "debt": {
+      "masterId": "string"
+    },
+    "cash_availability": {
+      "masterId": "string"
+    },
+    "information": {
+      "catalogKey": "string",
+      "targets": "array",
+      "locale": "string",
+      "jobId": "optional:string"
+    },
+    "published_text": {
+      "catalogKey": "string",
+      "textId": "string",
+      "locale": "string",
+      "corrected": "optional:boolean",
+      "jobId": "optional:string"
+    },
+    "chat_history": {
+      "chatId": "string"
+    },
+    "history": {},
+    "reputation": {
+      "masterId": "string"
+    },
+    "contacts": {
+      "userId": "string"
+    },
+    "role_counts": {},
+    "repayment": {
+      "requestId": "string"
+    },
+    "payout": {
+      "jobId": "string"
+    },
+    "inbox": {}
+  },
+  "queryViewFields": {
+    "feed": {
+      "jobs": "array"
+    },
+    "job": {
+      "job": "object"
+    },
+    "payment": {
+      "view": "object"
+    },
+    "debt": {
+      "view": "object"
+    },
+    "cash_availability": {
+      "mode": "string"
+    },
+    "information": {
+      "blocks": "array"
+    },
+    "published_text": {
+      "text": "string"
+    },
+    "chat_history": {
+      "messages": "array"
+    },
+    "history": {
+      "jobs": "array"
+    },
+    "reputation": {
+      "summary": "object"
+    },
+    "contacts": {
+      "contacts": "object"
+    },
+    "role_counts": {
+      "clientProfiles": "number",
+      "masterProfiles": "number"
+    },
+    "repayment": {
+      "request": "object"
+    },
+    "payout": {
+      "amount": "money",
+      "settled": "boolean",
+      "state": "string",
+      "providerStatus": "string?",
+      "operationId": "string?",
+      "deadline": "number?",
+      "reason": "string?",
+      "failureReason": "string?"
+    },
+    "inbox": {
+      "messages": "array"
+    }
+  },
+  "methodRoutes": {
+    "login": "/api/v1/account/access",
+    "recover": "/api/v1/account/access",
+    "translateMessage": "/api/v1/translations/message",
+    "draftTranslation": "/api/v1/translations/draft",
+    "dispatchNotification": "/api/v1/notifications/dispatch"
+  },
+  "commands": [
+    {
+      "type": "publish_policy",
+      "policy": {}
+    },
+    {
+      "type": "threshold",
+      "masterId": "synthetic",
+      "amount": null
+    },
+    {
+      "type": "save_catalog",
+      "draft": {},
+      "expectedSequence": null
+    },
+    {
+      "type": "approve_text",
+      "key": "synthetic",
+      "textId": "synthetic",
+      "locale": "synthetic",
+      "sequence": 1,
+      "revision": 1
+    },
+    {
+      "type": "approve_content_set",
+      "key": "synthetic",
+      "sequence": 1,
+      "revisions": [],
+      "confirmed": true
+    },
+    {
+      "type": "publish_catalog",
+      "key": "synthetic",
+      "sequence": 1
+    },
+    {
+      "type": "translation_correction",
+      "oldCatalogKey": "synthetic",
+      "newCatalogKey": "synthetic",
+      "textId": "synthetic",
+      "sameMeaningConfirmed": true
+    },
+    {
+      "type": "profile",
+      "displayName": "synthetic",
+      "photoId": null,
+      "specialization": {}
+    },
+    {
+      "type": "activate",
+      "role": "synthetic"
+    },
+    {
+      "type": "switch_role",
+      "role": "synthetic"
+    },
+    {
+      "type": "locale",
+      "locale": "synthetic"
+    },
+    {
+      "type": "bind_contact",
+      "proof": "synthetic"
+    },
+    {
+      "type": "new_job",
+      "id": "synthetic",
+      "draft": {}
+    },
+    {
+      "type": "edit_draft",
+      "jobId": "synthetic",
+      "draft": {}
+    },
+    {
+      "type": "publish_job",
+      "jobId": "synthetic"
+    },
+    {
+      "type": "link_jobs",
+      "jobId": "synthetic",
+      "linkedJobId": "synthetic"
+    },
+    {
+      "type": "initial_offer",
+      "jobId": "synthetic",
+      "id": "synthetic",
+      "chatId": "synthetic"
+    },
+    {
+      "type": "message",
+      "chatId": "synthetic",
+      "id": "synthetic",
+      "original": "synthetic",
+      "photoIds": [],
+      "sender": "synthetic"
+    },
+    {
+      "type": "revise_price",
+      "jobId": "synthetic",
+      "masterId": "synthetic",
+      "amount": "9007199254740993123456789",
+      "reason": "synthetic",
+      "confirmed": true
+    },
+    {
+      "type": "approve_price",
+      "jobId": "synthetic",
+      "masterId": "synthetic",
+      "approved": true,
+      "confirmed": true
+    },
+    {
+      "type": "final_application",
+      "jobId": "synthetic",
+      "masterId": "synthetic",
+      "confirmed": true,
+      "amount": "9007199254740993123456789",
+      "recipientId": "synthetic"
+    },
+    {
+      "type": "select_master",
+      "jobId": "synthetic",
+      "masterId": "synthetic",
+      "confirmed": true,
+      "amount": "9007199254740993123456789"
+    },
+    {
+      "type": "terminate_negotiation",
+      "jobId": "synthetic",
+      "masterId": "synthetic",
+      "confirmed": true,
+      "reason": "synthetic"
+    },
+    {
+      "type": "publication_deadline",
+      "jobId": "synthetic",
+      "cycleIndex": 1
+    },
+    {
+      "type": "cash",
+      "jobId": "synthetic"
+    },
+    {
+      "type": "initiate_payment",
+      "jobId": "synthetic",
+      "id": "synthetic",
+      "route": "synthetic"
+    },
+    {
+      "type": "payment_outcome",
+      "jobId": "synthetic",
+      "proof": "synthetic"
+    },
+    {
+      "type": "reservation_deadline",
+      "jobId": "synthetic"
+    },
+    {
+      "type": "decline_reservation",
+      "jobId": "synthetic",
+      "confirmed": true
+    },
+    {
+      "type": "accept_work",
+      "jobId": "synthetic",
+      "accepted": true,
+      "explanation": "synthetic"
+    },
+    {
+      "type": "submit_result",
+      "jobId": "synthetic",
+      "explanation": "synthetic",
+      "photoIds": []
+    },
+    {
+      "type": "complete",
+      "jobId": "synthetic"
+    },
+    {
+      "type": "cancel",
+      "jobId": "synthetic",
+      "id": "synthetic",
+      "reason": "synthetic",
+      "explanation": "synthetic",
+      "evidence": [],
+      "confirmed": true,
+      "classification": "synthetic",
+      "remainingWork": "synthetic"
+    },
+    {
+      "type": "cancellation_response",
+      "jobId": "synthetic",
+      "workStopped": true,
+      "financialConsent": true,
+      "explanation": "synthetic"
+    },
+    {
+      "type": "open_resolution",
+      "jobId": "synthetic",
+      "id": "synthetic",
+      "evidence": []
+    },
+    {
+      "type": "decide_resolution",
+      "caseId": "synthetic",
+      "decision": {}
+    },
+    {
+      "type": "inspect_resolution",
+      "caseId": "synthetic"
+    },
+    {
+      "type": "reminders",
+      "jobId": "synthetic"
+    },
+    {
+      "type": "start_payout",
+      "jobId": "synthetic",
+      "attemptId": "synthetic"
+    },
+    {
+      "type": "payout_outcome",
+      "jobId": "synthetic",
+      "proof": "synthetic"
+    },
+    {
+      "type": "start_settlement",
+      "obligationId": "synthetic",
+      "attemptId": "synthetic"
+    },
+    {
+      "type": "settlement_outcome",
+      "obligationId": "synthetic",
+      "proof": "synthetic"
+    },
+    {
+      "type": "request_repayment",
+      "id": "synthetic",
+      "amount": "9007199254740993123456789",
+      "confirmed": true
+    },
+    {
+      "type": "agree_repayment",
+      "requestId": "synthetic",
+      "amount": "9007199254740993123456789",
+      "method": "synthetic",
+      "agreementId": "synthetic"
+    },
+    {
+      "type": "receive_repayment",
+      "requestId": "synthetic",
+      "masterId": "synthetic",
+      "amount": "9007199254740993123456789",
+      "receiptId": "synthetic",
+      "agreementId": "synthetic",
+      "actuallyReceived": true,
+      "evidence": "synthetic"
+    },
+    {
+      "type": "close_repayment",
+      "requestId": "synthetic",
+      "reason": "synthetic"
+    },
+    {
+      "type": "support",
+      "id": "synthetic",
+      "userId": "synthetic",
+      "userRole": "synthetic",
+      "basis": "synthetic",
+      "basisId": "synthetic"
+    },
+    {
+      "type": "close_support",
+      "chatId": "synthetic"
+    },
+    {
+      "type": "review",
+      "jobId": "synthetic",
+      "id": "synthetic",
+      "stars": 1,
+      "marks": [],
+      "comment": "synthetic"
+    },
+    {
+      "type": "hide_review",
+      "reviewId": "synthetic",
+      "reason": "synthetic"
+    },
+    {
+      "type": "hide_history",
+      "jobId": "synthetic"
+    },
+    {
+      "type": "preferences",
+      "preference": {}
+    },
+    {
+      "type": "inbox",
+      "id": "synthetic",
+      "recipientId": "synthetic",
+      "original": "synthetic"
+    },
+    {
+      "type": "feedback",
+      "id": "synthetic",
+      "original": "synthetic"
+    },
+    {
+      "type": "evaluate_retention",
+      "factId": "synthetic"
+    }
+  ],
+  "queries": [
+    {
+      "type": "feed"
+    },
+    {
+      "type": "job",
+      "jobId": "synthetic"
+    },
+    {
+      "type": "payment",
+      "jobId": "synthetic"
+    },
+    {
+      "type": "debt",
+      "masterId": "synthetic"
+    },
+    {
+      "type": "cash_availability",
+      "masterId": "synthetic"
+    },
+    {
+      "type": "information",
+      "catalogKey": "synthetic",
+      "targets": [],
+      "locale": "synthetic"
+    },
+    {
+      "type": "published_text",
+      "catalogKey": "synthetic",
+      "textId": "synthetic",
+      "locale": "synthetic"
+    },
+    {
+      "type": "chat_history",
+      "chatId": "synthetic"
+    },
+    {
+      "type": "history"
+    },
+    {
+      "type": "reputation",
+      "masterId": "synthetic"
+    },
+    {
+      "type": "contacts",
+      "userId": "synthetic"
+    },
+    {
+      "type": "role_counts"
+    },
+    {
+      "type": "repayment",
+      "requestId": "synthetic"
+    },
+    {
+      "type": "payout",
+      "jobId": "synthetic"
+    },
+    {
+      "type": "inbox"
+    }
+  ],
+  "queryViews": [
+    {
+      "type": "feed",
+      "jobs": []
+    },
+    {
+      "type": "job",
+      "job": {}
+    },
+    {
+      "type": "payment",
+      "view": {}
+    },
+    {
+      "type": "debt",
+      "view": {}
+    },
+    {
+      "type": "cash_availability",
+      "mode": "synthetic"
+    },
+    {
+      "type": "information",
+      "blocks": []
+    },
+    {
+      "type": "published_text",
+      "text": "synthetic"
+    },
+    {
+      "type": "chat_history",
+      "messages": []
+    },
+    {
+      "type": "history",
+      "jobs": []
+    },
+    {
+      "type": "reputation",
+      "summary": {}
+    },
+    {
+      "type": "contacts",
+      "contacts": {}
+    },
+    {
+      "type": "role_counts",
+      "clientProfiles": 1,
+      "masterProfiles": 1
+    },
+    {
+      "type": "repayment",
+      "request": {}
+    },
+    {
+      "type": "payout",
+      "amount": "9007199254740993123456789",
+      "settled": true,
+      "state": "synthetic",
+      "providerStatus": null,
+      "operationId": null,
+      "deadline": null,
+      "reason": null,
+      "failureReason": null
+    },
+    {
+      "type": "inbox",
+      "messages": []
+    }
+  ]
+}

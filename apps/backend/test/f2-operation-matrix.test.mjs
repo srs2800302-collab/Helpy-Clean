@@ -27,7 +27,7 @@ const decision = { id: 'decision', type: 'mutual', reason: 'Verified mutual canc
 async function prepare(kind, name) {
   const h = harness();
   await h.ok(A, { type: 'publish_policy', policy: { ...h.config, version: 'matrix-policy', effectiveAt: h.clock.now() } });
-  const draft = () => ({ items: [scope(h.fixture)], cep: 1000n, address: 'Exact private address' });
+  const draft = () => ({ items: [scope(h.fixture)], cep: 1000n, publicAddress: 'Public district street', address: 'Exact private address' });
   const newDraft = () => h.ok(C, { type: 'new_job', id: 'job', draft: draft() });
   const offered = async () => { await h.published(); await h.offer(); };
   const revised = async () => { await offered(); await h.bilateral(); await h.ok(M, { type: 'revise_price', jobId: 'job', masterId: 'master', amount: 1100n, reason: 'Discussed scope', confirmed: true }); };

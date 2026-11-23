@@ -24,7 +24,7 @@ function customer() {
     assert.deepEqual({ state: h.repository.state, receipts: h.repository.receipts }, before); return result;
   };
   const publish = async (id, amount = 1000n) => {
-    const draft = { items: [scope(h.fixture)], cep: amount, address: `PRIVATE CUSTOMER SITE ${id}` };
+    const draft = { items: [scope(h.fixture)], cep: amount, publicAddress: `PUBLIC DISTRICT STREET ${id}`, address: `PRIVATE CUSTOMER SITE ${id}` };
     await send(C, { type: 'new_job', id, draft }); await send(C, { type: 'publish_job', jobId: id });
   };
   const reserve = async (id, amount = 1000n, chatId = `dialogue:${id}`) => {
@@ -98,7 +98,26 @@ test('CUSTOMER payment: late unknown protects reservation and only first failed 
   h.clock.value = 1000; h.outcomes.set('late-success', { operationId: 'third', amount: 101n, currency: 'THB', status: 'success' });
   await send(A, { type: 'payment_outcome', jobId: 'timed', proof: 'late-success' });
   assert.equal((await read(C, { type: 'job', jobId: 'timed' })).job.state, 'assigned');
-  assert.equal((await read(M, { type: 'job', jobId: 'timed' })).job.exactAddress, 'PRIVATE CUSTOMER SITE timed');
+  assert.equal((await read(M, { type: 'job', jobId: 'timed' })).job.address, 'PRIVATE CUSTOMER SITE timed');
+});
+
+test('CUSTOMER address projection keeps full address private until assignment and in assigned history', async () => {
+  const { send, read, publish, reserve } = customer();
+  await publish('address');
+  const feed = await read(M, { type: 'feed' });
+  assert.equal(feed.jobs.find(job => job.id === 'address').publicAddress, 'PUBLIC DISTRICT STREET address');
+  assert.ok(feed.jobs.every(job => !Object.hasOwn(job, 'address')));
+  await reserve('address');
+  const reservedMaster = await read(M, { type: 'job', jobId: 'address' });
+  assert.equal(reservedMaster.job.publicAddress, 'PUBLIC DISTRICT STREET address');
+  assert.equal(reservedMaster.job.address, null);
+  assert.equal((await read(C, { type: 'job', jobId: 'address' })).job.address, 'PRIVATE CUSTOMER SITE address');
+  await send(C, { type: 'cash', jobId: 'address' });
+  assert.equal((await read(M, { type: 'job', jobId: 'address' })).job.address, 'PRIVATE CUSTOMER SITE address');
+  await send(C, { type: 'accept_work', jobId: 'address', accepted: true, explanation: '' });
+  await send(M, { type: 'complete', jobId: 'address' });
+  const history = await read(M, { type: 'history' });
+  assert.equal(history.jobs.find(job => job.id === 'address').address, 'PRIVATE CUSTOMER SITE address');
 });
 
 test('CUSTOMER cancellation: 103 THB False Call keeps original 72/15/16 allocation after Admin changes rates', async () => {
@@ -136,7 +155,7 @@ test('CUSTOMER catalog: disabling a current service does not rewrite an already 
   await send(A, { type: 'save_catalog', draft, expectedSequence: null });
   await send(A, { type: 'approve_content_set', key: 'test-catalog:2', sequence: 1, confirmed: true, revisions: draft.texts.map(text => ({ textId: text.id, revision: text.revision })) });
   await send(A, { type: 'publish_catalog', key: 'test-catalog:2', sequence: 2 });
-  await refuse(C, { type: 'new_job', id: 'new', draft: { items: [scope(h.fixture)], cep: 105n, address: 'New site' } }, ['InactiveEntity']);
+  await refuse(C, { type: 'new_job', id: 'new', draft: { items: [scope(h.fixture)], cep: 105n, publicAddress: 'Public district street', address: 'New site' } }, ['InactiveEntity']);
   assert.equal((await read(C, { type: 'job', jobId: 'old' })).job.cep, 105n);
   assert.deepEqual(h.repository.state.jobs.old.snapshot, original);
 });
@@ -144,8 +163,8 @@ test('CUSTOMER catalog: disabling a current service does not rewrite an already 
 test('CUSTOMER privacy: uncertain external detection retains a lawful original without exporting it', async () => {
   const { h, send, publish, read } = customer(); await publish('privacy');
   await send(M, { type: 'initial_offer', jobId: 'privacy', id: 'privacy-offer', chatId: 'privacy-chat' });
-  let exports = 0;
-  h.ports.textSafety.inspect = async ({ text, purpose }) => ({ ok: true, value: { text, purpose, status: purpose === 'job_chat' ? 'allowed' : 'unknown', reason: null } });
+  let exports = 0, checks = 0;
+  h.ports.textSafety.inspect = async ({ text, purpose }) => ({ ok: true, value: { text, purpose, status: ++checks === 1 ? 'allowed' : 'unknown', reason: null } });
   h.ports.translation.detect = async () => { exports++; return { ok: true, value: { language: 'en', reliable: true } }; };
   await send(C, { type: 'message', chatId: 'privacy-chat', id: 'original', original: '60 x 40 x 80, 103 THB, 20:30', photoIds: [], sender: 'user' });
   assert.equal(exports, 0);
@@ -158,7 +177,7 @@ for (const entity of ['job', 'repayment', 'inbox', 'feedback', 'draft', 'support
   const { h, send, refuse, publish, reserve, finish, assign } = customer(); let command, session = C;
   if (entity === 'job') {
     await finish('permanent', 105n); delete h.repository.state.jobs.permanent;
-    command = { type: 'new_job', id: 'permanent', draft: { items: [scope(h.fixture)], cep: 999n, address: 'Replacement obligation' } };
+    command = { type: 'new_job', id: 'permanent', draft: { items: [scope(h.fixture)], cep: 999n, publicAddress: 'Public district street', address: 'Replacement obligation' } };
   } else if (entity === 'repayment') {
     await finish('cash', 1000n); await send(M, { type: 'request_repayment', id: 'request', amount: 100n, confirmed: true });
     delete h.repository.state.repayments.request; session = M; command = { type: 'request_repayment', id: 'request', amount: 100n, confirmed: true };
@@ -263,7 +282,7 @@ test('CUSTOMER message identity: a remaining original business fact prevents rep
 
 test('CUSTOMER replay: the same authorized operation returns its receipt without recreating a missing projection', async () => {
   const { h, send } = customer();
-  const command = { type: 'new_job', id: 'stable', draft: { items: [scope(h.fixture)], cep: 105n, address: 'Original site' } };
+  const command = { type: 'new_job', id: 'stable', draft: { items: [scope(h.fixture)], cep: 105n, publicAddress: 'Public district street', address: 'Original site' } };
   const first = await send(C, command, 'original-operation'); delete h.repository.state.jobs.stable;
   const before = structuredClone({ state: h.repository.state, receipts: h.repository.receipts });
   assert.deepEqual(await send(C, command, 'original-operation'), first);

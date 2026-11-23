@@ -43,7 +43,7 @@ function imports(file, source) {
 
 function allowed(file, dependency) {
   const relative = file.replaceAll('\\', '/');
-  const resolved = dependency.startsWith('.')
+  const resolved = dependency.startsWith('.') || relative.endsWith('.dart') && !dependency.includes(':')
     ? path.posix.normalize(path.posix.join(path.posix.dirname(relative), dependency))
     : dependency;
   if (relative.startsWith('packages/contracts/')) {
@@ -60,6 +60,9 @@ function allowed(file, dependency) {
   }
   if (relative.startsWith('apps/backend/src/transport/')) {
     return dependency === '@helpy/contracts' || /^apps\/backend\/src\/(transport|application)\//.test(resolved);
+  }
+  if (relative.startsWith('apps/backend/src/infrastructure/')) {
+    return dependency.startsWith('node:') || dependency === '@helpy/contracts' || resolved.startsWith('apps/backend/src/');
   }
   if (relative.startsWith('apps/admin/src/application/')) {
     return dependency === '@helpy/contracts' || resolved.startsWith('apps/admin/src/application/');

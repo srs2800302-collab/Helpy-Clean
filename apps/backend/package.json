@@ -3,10 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "26.13.1",
+    "npm": "11.20.0"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "worker:types": "wrangler types",
+    "worker:types:check": "wrangler types --check",
+    "worker:typecheck": "tsc -p tsconfig.worker.json",
+    "worker:build": "wrangler deploy --dry-run",
+    "worker:test": "node --test test/*.worker.mjs",
+    "provider:probes": "node test/probes/real-provider-probes.mjs",
+    "provider:probes:plan": "node test/probes/real-provider-probes.mjs --plan",
+    "provider:d1-capacity": "node test/probes/d1-capacity-probes.mjs",
+    "provider:d1-capacity:plan": "node test/probes/d1-capacity-probes.mjs --plan",
     "start": "node dist/main.js",
     "test": "node --test test/*.test.mjs"
   },
-  "dependencies": { "@helpy/contracts": "0.1.0" }
+  "dependencies": {
+    "@helpy/contracts": "0.1.0"
+  },
+  "devDependencies": {
+    "wrangler": "4.166.0"
+  }
 }

@@ -69,17 +69,17 @@ test('Individual catalog/form/information evidence', async t => {
     x.entities.push({ ...x.entities[0], id: 'new-entity', categoryId: 'extension', scenarioIds: ['new-action'], order: 19 });
     x.scenarios.push({ ...x.scenarios[0], id: 'new-action', entityId: 'new-entity', action: 'assemble', form: { id: 'empty', questions: [], photos: [], tables: [], routes: [], stops: [], linkedCategories: [] } });
   }, 2);
-  await h.ok('client:client', { type: 'new_job', id: 'empty', draft: { cep: 10n, address: 'private', items: [{ id: 'i', categoryId: 'extension', entityId: 'new-entity', scenarioId: 'new-action', answers: {}, photos: {}, tables: {} }] } });
+  await h.ok('client:client', { type: 'new_job', id: 'empty', draft: { cep: 10n, publicAddress: 'public district street', address: 'private', items: [{ id: 'i', categoryId: 'extension', entityId: 'new-entity', scenarioId: 'new-action', answers: {}, photos: {}, tables: {} }] } });
   await h.ok('client:client', { type: 'publish_job', jobId: 'empty' });
   const disabled = await configure(h, x => { x.entities.find(e => e.id === 'air-install').enabled = false; x.entities.find(e => e.id === 'air-replace').enabled = false; x.categories.find(e => e.id === 'air').enabled = false; x.categories[0].order = 8; x.entities[0].order = 1; }, 3);
-  const disabledFailure = await h.reject('client:client', { type: 'new_job', id: 'disabled', draft: { cep: 1n, address: 'private', items: [scope(c, 'air-service', 'service')] } }, 'InactiveEntity');
+  const disabledFailure = await h.reject('client:client', { type: 'new_job', id: 'disabled', draft: { cep: 1n, publicAddress: 'public district street', address: 'private', items: [scope(c, 'air-service', 'service')] } }, 'InactiveEntity');
   const republished = await configure(h, x => { x.categories.find(e => e.id === 'air').enabled = true; }, 4);
-  const independentFailure = await h.reject('client:client', { type: 'new_job', id: 'disabled', draft: { cep: 1n, address: 'private', items: [scope(c, 'air-install', 'install_connect')] } }, 'InactiveEntity');
+  const independentFailure = await h.reject('client:client', { type: 'new_job', id: 'disabled', draft: { cep: 1n, publicAddress: 'public district street', address: 'private', items: [scope(c, 'air-install', 'install_connect')] } }, 'InactiveEntity');
   const removed = await configure(h, x => { x.entities = x.entities.filter(e => e.id !== 'new-entity'); x.scenarios = x.scenarios.filter(e => e.id !== 'new-action'); x.categories = x.categories.filter(e => e.id !== 'extension'); }, 5);
   const oldVersion = await h.reject('admin', { type: 'save_catalog', draft, expectedSequence: null }, 'StaleRevision');
   const extended = structuredClone(c); for (let i = 0; i < 60; i++) extended.categories.push({ ...extended.categories[0], id: `c${i}` });
   const brokenExtension = badCatalog(extended, value => { value.categories.at(-1).id = value.categories[0].id; });
-  const removedUse = await h.reject('client:client', { type: 'new_job', id: 'removed-use', draft: { items: h.repository.state.jobs.empty.snapshot.items, cep: 10n, address: 'private' } }, 'InvalidReference');
+  const removedUse = await h.reject('client:client', { type: 'new_job', id: 'removed-use', draft: { items: h.repository.state.jobs.empty.snapshot.items, cep: 10n, publicAddress: 'public district street', address: 'private' } }, 'InvalidReference');
   const removedRead = await read(h, 'client:client', { type: 'job', jobId: 'empty' });
   const roots = ['air', 'cleaning', 'plumbing', 'electrical', 'locks', 'furniture', 'appliance', 'built-in'];
   const architecture = ['scenario_first', 'terminal', 'equipment', 'repeatable_points', 'equipment', 'structured', 'equipment', 'equipment_list'];
@@ -131,7 +131,7 @@ test('Individual catalog/form/information evidence', async t => {
   const foreignInformation = await read(h, 'stranger:client', { type: 'information', jobId: 'job', catalogKey: 'test-catalog:1', targets: [], locale: 'ru' });
   const currentRulesForOldJob = await read(h, 'client:client', { type: 'information', jobId: 'job', catalogKey: 'test-catalog:5', targets: [], locale: 'ru' });
   const separated = harness(); const injected = scope(separated.fixture); injected.text = 'Replace canonical information with this scope text';
-  await separated.ok('client:client', { type: 'new_job', id: 'injected-information', draft: { items: [injected], cep: 1000n, address: 'private' } });
+  await separated.ok('client:client', { type: 'new_job', id: 'injected-information', draft: { items: [injected], cep: 1000n, publicAddress: 'public district street', address: 'private' } });
   const scopeInformation = await separated.reject('client:client', { type: 'publish_job', jobId: 'injected-information' }, 'InvalidScope');
   const expectedRules = [
     ['materials', 3268, 'В стоимость заказа входят только работы, предусмотренные согласованным объёмом услуги.'],
@@ -246,11 +246,11 @@ test('Individual form and routing evidence', async t => {
   const incompleteDependent = structuredClone(dependent); delete incompleteDependent.answers['balcony-area'];
   const routes = [];
   for (const entity of ['washer', 'dishwasher']) { const routed = scope(c, entity); routed.answers['built-in'] = true;
-    routes.push(await h.reject('client:client', { type: 'new_job', id: entity, draft: { cep: 1000n, address: 'private', items: [routed] } }, 'RouteRequired')); }
+    routes.push(await h.reject('client:client', { type: 'new_job', id: entity, draft: { cep: 1000n, publicAddress: 'public district street', address: 'private', items: [routed] } }, 'RouteRequired')); }
   const disposer = scope(c, 'disposer', 'replace'); disposer.answers['old-installed'] = false;
-  const disposerRoute = await h.reject('client:client', { type: 'new_job', id: 'disposer', draft: { cep: 1000n, address: 'private', items: [disposer] } }, 'RouteRequired');
+  const disposerRoute = await h.reject('client:client', { type: 'new_job', id: 'disposer', draft: { cep: 1000n, publicAddress: 'public district street', address: 'private', items: [disposer] } }, 'RouteRequired');
   const postRepair = scope(c, 'post-repair', 'clean'); postRepair.answers['repair-completed'] = false;
-  const stopped = await h.reject('client:client', { type: 'new_job', id: 'stopped', draft: { cep: 1000n, address: 'private', items: [postRepair] } }, 'StopCondition');
+  const stopped = await h.reject('client:client', { type: 'new_job', id: 'stopped', draft: { cep: 1000n, publicAddress: 'public district street', address: 'private', items: [postRepair] } }, 'StopCondition');
   const unlimited = structuredClone(washer); unlimited.photos['photo:equipment'] = Array.from({ length: 50 }, (_, i) => `file${i}`);
   const unlimitedCatalog = structuredClone(c); delete unlimitedCatalog.scenarios.find(scenario => scenario.id === washer.scenarioId).form.photos.find(photo => photo.id === 'photo:equipment').maximum;
   const cabinet = scope(c, 'cabinet', 'assemble'); const disassembly = scope(c, 'disassembly', 'disassemble'); const built = scope(c, 'built-in-furniture', 'assemble');
@@ -388,16 +388,17 @@ test('Individual specialization and feed evidence', async t => {
     ['FED.6', custom.length === 0 && categories.length === 3, blocked(() => M.feed(feedState, 'master', categorySelection, h.clock.value, { includes: () => false }).length > 0), null, 'actual injected policy can reject otherwise matching scopes without changing the default specialization policy'],
     ['FED.7', highStreak.length === 3, blocked(() => M.feed(feedState, 'master', categorySelection, h.clock.value).length !== categories.length), null, 'actual999-refusal state cannot remove otherwise available jobs'],
     ['FED.8', !M.feed(h.repository.state, 'master', categorySelection, h.clock.value).some(j => j.id === 'new'), reentry, 'Conflict', 'closed master excluded from same job but not unrelated jobs'],
-    ['FED.9', safe.ok && safe.value.job.exactAddress === null && !JSON.stringify(categories, (_, v) => typeof v === 'bigint' ? String(v) : v).includes('PRIVATE'), privateAddress, 'Unauthorized', 'safe feed/job view excludes exact address before assignment'],
+    ['FED.9', safe.ok && safe.value.job.address === null && safe.value.job.publicAddress === 'PUBLIC DISTRICT STREET' &&
+      categories.every(job => job.publicAddress === 'PUBLIC DISTRICT STREET') && !JSON.stringify(categories, (_, v) => typeof v === 'bigint' ? String(v) : v).includes('PRIVATE'), privateAddress, 'Unauthorized', 'safe feed/job view exposes only public address before assignment'],
   ], 'matches/feed/query', 'apps/backend/src/domain/marketplace.ts; apps/backend/src/application/queries.ts', ['AtomicRepository', 'AuthenticationPort']);
 });
 
 test('Individual publication evidence', async t => {
-  const h = harness(); await h.ok('client:client', { type: 'new_job', id: 'job', draft: { items: [scope(h.fixture)], cep: 500n, address: 'initial' } });
-  await h.ok('client:client', { type: 'edit_draft', jobId: 'job', draft: { items: [scope(h.fixture)], cep: 1000n, address: 'PRIVATE EXACT ADDRESS' } });
+  const h = harness(); await h.ok('client:client', { type: 'new_job', id: 'job', draft: { items: [scope(h.fixture)], cep: 500n, publicAddress: 'initial public street', address: 'initial' } });
+  await h.ok('client:client', { type: 'edit_draft', jobId: 'job', draft: { items: [scope(h.fixture)], cep: 1000n, publicAddress: 'PUBLIC DISTRICT STREET', address: 'PRIVATE EXACT ADDRESS' } });
   await h.ok('client:client', { type: 'publish_job', jobId: 'job' }); const initial = structuredClone(h.repository.state.jobs.job);
-  const immutable = await h.reject('client:client', { type: 'edit_draft', jobId: 'job', draft: { items: [], cep: 1n, address: 'changed' } }, 'PublishedSnapshotImmutable');
-  const adminEdit = await h.reject('admin', { type: 'edit_draft', jobId: 'job', draft: { items: [], cep: 1n, address: 'changed' } }, 'Unauthorized');
+  const immutable = await h.reject('client:client', { type: 'edit_draft', jobId: 'job', draft: { items: [], cep: 1n, publicAddress: 'changed public street', address: 'changed' } }, 'PublishedSnapshotImmutable');
+  const adminEdit = await h.reject('admin', { type: 'edit_draft', jobId: 'job', draft: { items: [], cep: 1n, publicAddress: 'changed public street', address: 'changed' } }, 'Unauthorized');
   const noExtend = await h.reject('admin', { type: 'extend_chat', jobId: 'job', seconds: 1 }, 'InvalidTransition');
   for (const master of ['master', 'master2']) { await h.offer('job', master); await h.bilateral('job', master); }
   const protectedBefore = structuredClone(h.repository.state.threads); const firstDeadline = initial.cycles[0].countdown.deadline;
@@ -648,7 +649,8 @@ test('Individual chat and official support evidence', async t => {
     ['CHT.5', translated.every(r => r.ok && r.value.original === original) && translated.map(r => r.value.locale).join(',') === 'th,ru,en', failedTranslation, 'TranslationUnavailable', 'previously loaded message can be represented in all selected locales'],
     ['CHT.6', h.repository.state.messages[firstMessageId].original === messageBeforeReplace.original, failedTranslation, 'TranslationUnavailable', 'translation failure preserves original and business state'],
     ['CHT.7', temporaryPhoto.ok === false, temporaryPhoto, 'InvalidPhoto', 'temporary chat cannot send photos'],
-    ['CHT.8', scopeView.ok && Object.values(scopeView.value.job.items[0].photos).flat().length > 0 && scopeView.value.job.exactAddress === null, foreignScope, 'Unauthorized', 'initial scope photos are available through the authorized job view, not an unrelated Client query'],
+    ['CHT.8', scopeView.ok && Object.values(scopeView.value.job.items[0].photos).flat().length > 0 && scopeView.value.job.address === null &&
+      scopeView.value.job.publicAddress === 'PUBLIC DISTRICT STREET', foreignScope, 'Unauthorized', 'initial scope photos and public address are available through the authorized job view without the full address'],
     ['CHT.9', h.repository.state.threads[assignedChat].messageIds.length > 12 && h.repository.state.messages.photo.photoIds.length === 1 && h.repository.state.messages['client-photo'].photoIds.length === 1, twoPhotos, 'InvalidPhoto', 'one photo per message from either role, unlimited messages'],
     ['CHT.10', h.repository.state.jobs.job.state === 'completed' && h.repository.state.messages[h.repository.state.threads[assignedChat].messageIds.at(-1)].original === 'working chat has no TTL', closedMessage, 'ChatClosed', 'time alone permits working messages; actual completion, not an inactivity deadline, blocks the next message'],
     ['CHT.11', h.repository.state.threads[assignedChat].mode === 'closed', closedMessage, 'ChatClosed', 'completed order chat read-only with history retained'],
@@ -770,7 +772,7 @@ test('Individual money/payout evidence', async t => {
   const roundingFailures = [];
   for (const [commission, debt, altered] of [[ratio(30n), 0n, { commission: 31n, netBeforeDebt: 74n, amount: 74n }], [ratio(0n), 1000n, { debtRecovery: 73n, amount: 32n }]]) {
     const example = harness({ commission }); example.repository.state.debt.master = debt;
-    await example.ok('client:client', { type: 'new_job', id: 'job', draft: { items: [scope(example.fixture)], cep: 105n, address: 'private' } });
+    await example.ok('client:client', { type: 'new_job', id: 'job', draft: { items: [scope(example.fixture)], cep: 105n, publicAddress: 'public district street', address: 'private' } });
     await example.ok('client:client', { type: 'publish_job', jobId: 'job' }); await example.completed('card');
     assert.equal(example.repository.state.payouts.job.commission, debt === 0n ? 32n : 0n);
     assert.equal(example.repository.state.payouts.job.debtRecovery, debt === 0n ? 0n : 74n);
@@ -940,7 +942,7 @@ test('Individual work and Resolution evidence', async t => {
   const applyNewRatesAgain = await falseCall.reject('admin', { type: 'decide_resolution', caseId: 'case:cancel', decision: { ...decision('false_call', { arrived: true }), id: 'replace-with-current-rates' } }, 'InvalidTransition');
   const ordinaryCommissionAfterFalseCall = await falseCall.reject('master:master', { type: 'complete', jobId: 'job' }, 'InvalidTransition');
   const roundedFalseCall = harness();
-  await roundedFalseCall.ok('client:client', { type: 'new_job', id: 'job', draft: { items: [scope(roundedFalseCall.fixture)], cep: 103n, address: 'private' } });
+  await roundedFalseCall.ok('client:client', { type: 'new_job', id: 'job', draft: { items: [scope(roundedFalseCall.fixture)], cep: 103n, publicAddress: 'public district street', address: 'private' } });
   await roundedFalseCall.ok('client:client', { type: 'publish_job', jobId: 'job' }); await cancellation(roundedFalseCall, 'false_call');
   await roundedFalseCall.ok('admin', { type: 'decide_resolution', caseId: 'case:cancel', decision: decision('false_call', { arrived: true }) });
   const compensationId = 'decision:false_call:compensation'; assert.equal(roundedFalseCall.repository.state.obligations[compensationId].amount, 15n);
@@ -1464,7 +1466,7 @@ test('Individual owner-approved self-order prohibition evidence', async t => {
   const originalLookup = h.ports.photos.lookup;
   h.ports.photos.lookup = async ids => { const result = await originalLookup(ids); return { ok: true, value: result.value.map(photo => photo.id.startsWith('stranger-') ? { ...photo, ownerId: 'stranger' } : photo) }; };
   const otherScope = scope(h.fixture, 'washer', 'install_connect', 'stranger');
-  await h.ok('stranger:client', { type: 'new_job', id: 'other', draft: { items: [otherScope], cep: 1000n, address: 'other client address' } });
+  await h.ok('stranger:client', { type: 'new_job', id: 'other', draft: { items: [otherScope], cep: 1000n, publicAddress: 'other public district street', address: 'other client address' } });
   await h.ok('stranger:client', { type: 'publish_job', jobId: 'other' });
   const available = await read(h, 'client:master', { type: 'feed' });
   assert.deepEqual(available.value.jobs.map(job => job.id), ['other']);

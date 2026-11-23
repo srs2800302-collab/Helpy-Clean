@@ -84,7 +84,7 @@ test('FRM routes/stop conditions produce typed failure before job publication; c
   const h = harness();
   for (const entity of ['washer', 'dishwasher']) {
     const item = scope(h.fixture, entity); item.answers['built-in'] = true;
-    await h.reject('client:client', { type: 'new_job', id: entity, draft: { items: [item], cep: 1n, address: 'private' } }, 'RouteRequired');
+    await h.reject('client:client', { type: 'new_job', id: entity, draft: { items: [item], cep: 1n, publicAddress: 'public district street', address: 'private' } }, 'RouteRequired');
     assert.equal(h.repository.state.jobs[entity], undefined);
   }
   const disposer = scope(h.fixture, 'disposer', 'replace'); disposer.answers['old-installed'] = false;
@@ -104,7 +104,7 @@ test('FRM Electrical points and item quantity differ; built-in equipment actions
   assert.equal(h.repository.state.jobs.points.snapshot.items.length, 2); assert.equal(h.repository.state.jobs.points.snapshot.items[0].answers.quantity, 7);
   const appliances = [scope(h.fixture, 'bi-oven', 'install_connect', 'oven'), scope(h.fixture, 'bi-fridge', 'replace', 'fridge')];
   await h.published('appliances', '', '', appliances); assert.notEqual(appliances[0].scenarioId.split(':')[1], appliances[1].scenarioId.split(':')[1]);
-  await h.reject('client:client', { type: 'edit_draft', jobId: 'points', draft: { items: points, cep: 10n, address: 'changed' } }, 'PublishedSnapshotImmutable');
+  await h.reject('client:client', { type: 'edit_draft', jobId: 'points', draft: { items: points, cep: 10n, publicAddress: 'changed public street', address: 'changed' } }, 'PublishedSnapshotImmutable');
 });
 test('TXT/INF authoring requires Admin, exact revisions and explicit three-language atomic approval', async () => {
   const h = harness(); const draft = catalog({ approved: false, version: 2 }); const key = 'test-catalog:2';
@@ -406,7 +406,7 @@ test('RET independent calendar year and completed 90-day anchors; cancelled/expi
 });
 test('PRC atomic rollback, operation collision, durable replay across repository restart', async () => {
   const h = harness(); h.repository.failNextCommit = true;
-  await h.reject('client:client', { type: 'new_job', id: 'job', draft: { items: [scope(h.fixture)], cep: 1000n, address: 'private' } }, 'Conflict', 'atomic');
+  await h.reject('client:client', { type: 'new_job', id: 'job', draft: { items: [scope(h.fixture)], cep: 1000n, publicAddress: 'public district street', address: 'private' } }, 'Conflict', 'atomic');
   await h.published(); await h.offer(); const command = { type: 'terminate_negotiation', jobId: 'job', masterId: 'master', confirmed: true, reason: 'withdraw' };
   await h.ok('master:master', command, 'durable'); const restarted = new FakeRepository(await h.repository.read(), structuredClone(h.repository.receipts));
   const core = new DomainCore({ ...h.ports, repository: restarted }); const replay = await core.execute('master:master', 'durable', command); assert.equal(replay.ok, true); assert.equal(restarted.state.refusalStreak.master, 1);

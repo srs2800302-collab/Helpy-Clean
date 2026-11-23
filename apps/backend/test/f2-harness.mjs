@@ -91,7 +91,7 @@ export function harness(changes = {}) {
     return result;
   };
   async function published(id = 'job', entity = 'washer', action = 'install_connect', items = null) {
-    const draft = { items: items ?? [scope(fixture, entity, action)], cep: 1000n, address: 'PRIVATE EXACT ADDRESS' };
+    const draft = { items: items ?? [scope(fixture, entity, action)], cep: 1000n, publicAddress: 'PUBLIC DISTRICT STREET', address: 'PRIVATE EXACT ADDRESS' };
     await ok('client:client', { type: 'new_job', id, draft }); await ok('client:client', { type: 'publish_job', jobId: id }); return repository.state.jobs[id];
   }
   async function offer(jobId = 'job', masterId = 'master') { return ok(`${masterId}:master`, { type: 'initial_offer', jobId, id: `offer:${jobId}:${masterId}`, chatId: `chat:${jobId}:${masterId}` }); }

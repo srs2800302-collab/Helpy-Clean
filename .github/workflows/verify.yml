@@ -1,4 +1,4 @@
-name: Verify F1
+name: Verify HELPY
 
 on:
   push:
@@ -14,12 +14,24 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: npm
+      - name: Verify Node toolchain
+        run: |
+          test "$(node --version)" = "v26.13.1"
+          test "$(npm --version)" = "11.20.0"
       - run: npm ci
+      - name: Prepare accepted F2 runtime evidence directory
+        run: mkdir -p docs/f2/evidence
       - run: npm run verify
+      - run: npm run worker:types:check --workspace @helpy/backend
+      - run: npm run worker:typecheck --workspace @helpy/backend
+      - run: npm run worker:build --workspace @helpy/backend
+      - run: npm run worker:test --workspace @helpy/backend
 
   flutter:
     runs-on: ubuntu-latest

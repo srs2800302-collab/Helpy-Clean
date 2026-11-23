@@ -45,7 +45,7 @@ const answer: Shape = value => Array.isArray(value) ? list(number('InvalidScope'
 const answers = dictionary(optional(answer), 'InvalidScope');
 const item = object({ ...target, id, answers, photos: dictionary(photos, 'InvalidPhoto'),
   tables: dictionary(list(answers, 'InvalidScope'), 'InvalidScope') }, 'InvalidScope');
-const draft = object({ items: list(item, 'InvalidScope'), cep: bigint(), address: text('InvalidScope') }, 'InvalidScope');
+const draft = object({ items: list(item, 'InvalidScope'), cep: bigint(), publicAddress: text('InvalidScope'), address: text('InvalidScope') }, 'InvalidScope');
 const ratio = object({ numerator: bigint('InvalidRate'), denominator: bigint('InvalidRate') }, 'InvalidRate');
 const period = object({ value: n, unit: s }, 'InvalidConfiguration');
 export const policy = object({
